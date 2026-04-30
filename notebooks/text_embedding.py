@@ -28,5 +28,8 @@ def load_records(data_dir) -> list[dict]:
 #%% MAIN
 
 knowledge_data = load_records(knowledge_data_dir)
-knowledge_data[:2]
+knowledge_data_text = [
+    data.get('text') for data in knowledge_data
+    ]
+knowledge_data_text[:2]
 
