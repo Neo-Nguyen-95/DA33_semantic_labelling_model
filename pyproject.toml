@@ -1,0 +1,22 @@
+[project]
+name = "da33_labelling_project"
+version = "1.0.0"
+description = "Research for labelling problem"
+authors = [
+    {name="Neo"}
+]
+dependencies = [
+    "pandas",
+    "scikit-learn"
+]
+
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
