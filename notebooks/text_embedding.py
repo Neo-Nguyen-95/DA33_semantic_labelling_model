@@ -1,35 +1,50 @@
 #%% LIB
-import json
-# import os
-# from pathlib import Path
-# from dotenv import load_dotenv
-
 from da33_labelling_project.config import (
-    # PROJECT_ROOT, 
     PROCESSED_DATA_DIR
+    )
+from da33_labelling_project.utils import (
+    get_openai_client,
+    load_records,
+    save_records
+    )
+from da33_labelling_project.embedding_process import (
+    embedding_text,
+    build_vector_store,
+    search_similar_embeddings,
+    save_embedding_store
     )
 
 #%% CONFIG
-# load_dotenv(PROJECT_ROOT / ".env")
+client = get_openai_client()
+
 knowledge_data_dir = PROCESSED_DATA_DIR / 'high_school_knowledge'
 
-#%% HELPERS
-
-def load_records(data_dir) -> list[dict]:
-    files = [file for file in data_dir.glob("*.json")]
-    data_holder = []
-    for file in files:
-        with open(file, "r", encoding="utf-8") as f:
-            temp_data = json.load(f)
-            data_holder.extend(temp_data)
-    return data_holder
-
-
 #%% MAIN
-
 knowledge_data = load_records(knowledge_data_dir)
-knowledge_data_text = [
+knowledge_texts = [
     data.get('text') for data in knowledge_data
     ]
-knowledge_data_text[:2]
 
+embeddings = embedding_text(knowledge_texts, 100)
+faiss_index = build_vector_store(embeddings)
+
+faiss_path = (
+        PROCESSED_DATA_DIR / 
+        'high_school_knowledge_embeddings' / 
+        'high_school_knowledge.faiss'
+        )
+save_embedding_store(faiss_index, faiss_path)
+json_path = (
+    PROCESSED_DATA_DIR / 
+    'high_school_knowledge_embeddings' / 
+    'high_school_knowledge.json'
+    )
+save_records(knowledge_texts, json_path)
+
+
+#%%% Testing
+_, I = search_similar_embeddings(
+    query_text='thuỷ phân ester trong môi trường base là phản ứng một chiều',
+    index=faiss_index,
+    k=2
+    )
