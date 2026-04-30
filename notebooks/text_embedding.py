@@ -19,13 +19,40 @@ client = get_openai_client()
 
 knowledge_data_dir = PROCESSED_DATA_DIR / 'high_school_knowledge'
 
+#%% HELPERS
+def chunk_and_filter_data(knowledge_data, chunk_size=500):
+    holder = []
+    for data in knowledge_data:
+        tokens = data.get('text').split()
+        part = 1
+        if len(tokens) < 100:
+            continue
+        if len(tokens) < chunk_size:
+            holder.append(data)
+            continue
+        for i in range(0, len(tokens), chunk_size):
+            chunked_token = tokens[i: i+chunk_size]
+            chunked_text = " ".join(chunked_token)
+            chunked_data = {
+                'url': data.get('url'),
+                'title': data.get('title') + f' part {part}',
+                'text': chunked_text,
+                'grade': data.get('grade'),
+                'subject': data.get('subject')
+                }
+            holder.append(chunked_data)
+            part += 1
+    return holder
+    
+
 #%% MAIN
 knowledge_data = load_records(knowledge_data_dir)
+chunked_knowledge_data = chunk_and_filter_data(knowledge_data)
 knowledge_texts = [
-    data.get('text') for data in knowledge_data
+    data.get('text') for data in chunked_knowledge_data
     ]
 
-embeddings = embedding_text(knowledge_texts, 100)
+embeddings = embedding_text(knowledge_texts, 200)
 faiss_index = build_vector_store(embeddings)
 
 faiss_path = (
@@ -39,12 +66,12 @@ json_path = (
     'high_school_knowledge_embeddings' / 
     'high_school_knowledge.json'
     )
-save_records(knowledge_texts, json_path)
+save_records(chunked_knowledge_data, json_path)
 
 
 #%%% Testing
 _, I = search_similar_embeddings(
-    query_text='thuỷ phân ester trong môi trường base là phản ứng một chiều',
+    query_text="Khái niệm Khi thay thế nhóm -OH ở nhóm carboxyl (-COOH) của carboxylic acid bằng nhóm −OR' thì được ester. Trong đó R' là gốc hydrocarbon. Ester đơn chức có công thức chung là RCOOR', trong đó R là gốc hydrocarbon hoặc H, R' là gốc hydrocarbo",
     index=faiss_index,
     k=2
     )
