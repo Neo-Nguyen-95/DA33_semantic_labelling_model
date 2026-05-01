@@ -3,7 +3,6 @@ from da33_labelling_project.config import (
     PROCESSED_DATA_DIR
     )
 from da33_labelling_project.embedding_process import (
-    embedding_text,
     load_embedding_store,
     search_similar_embeddings
     )
